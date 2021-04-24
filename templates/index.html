@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block head %}
+    <title>首页</title>
+{% endblock %}
+
+{% block body %}
+    <div class="container">
+      <div class="jumbotron">
+          <h1>城市学院失物招领平台</h1>
+          <p><a class="btn btn-primary btn-lg" href="{% url 'users:info' %}" role="button">发布待招领失物</a></p>
+      </div>
+      <div class="row">
+          <div class="col-sm-8">
+              {% for good in goods_list %}
+              <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="panel-title">{{ good.gname }}</h4>
+                </div>
+                <div class="panel-body">
+                  <div class="media">
+                    <div class="media-left media-middle">
+                        <img class="media-object" src="/static/images/{{ good.img }}" alt="" style="height: 200px;width: 300px">
+                    </div>
+                    <div class="media-right">
+                        <p>种类： <span>{{ good.gtype }}</span></p>
+                        <p>状态： {% if good.status %}<span>已认领</span>{% else %}<span>未认领</span>{% endif %} </p>
+                        <p>发布时间： <span>{{ good.gtime | date:"Y-m-d H:i" }}</span></p>
+                        <p>发布： <span>{{ good.user.uname }}</span></p>
+                        <p>联系方式： <span>{{ good.user.mobile }}</span></p>
+                        <p>失物地址： <span>{{ good.address }}</span></p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+          </div>
+
+          <div class="col-sm-4">
+              <div class="panel panel-default">
+                  <div class="panel-heading">用户信息</div>
+                  <hr>
+                  {% if request.session.username %}
+                  <div class="panel-body">
+                      <p>名称：<span>{{ request.session.username }}</span></p>
+                      <p>邮箱：<span>{{ request.session.email }}
+                          <span>{% if not user.is_active %}未激活<a id="active_email" href="javascript:;" >激活邮箱</a></span>{% endif %}</span></p>
+                      <p><a href="{% url 'users:info' %}">查看/管理我的挂的失物</a></p>
+                      <p><a href="/logout/">退出登录</a></p>
+                  </div>
+                  {% else %}
+                  <div class="panel-body"><h3><a href="/login/">请先登录</a></h3></div>
+                  {% endif %}
+                  <hr>
+              </div>
+              <div class="panel panel-info">
+                <div class="panel-body">
+                  <p>学院网元工作室提供技术支持</p>
+                  <p>有问题可致电：020-12345678</p>
+                </div>
+              </div>
+          </div>
+      </div>
+
+          <nav aria-label="Page navigation">
+          <ul class="pagination">
+            {% if goods_list.has_previous %}
+            <li>
+              <a href="{% url 'mysite:index' %}?page_num={{ goods_list.previous_page_number }}" aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span>
+              </a>
+            </li>
+            {% else %}
+            <li class="disabled">
+              <a href="javascript:;" aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span>
+              </a>
+            </li>
+            {% endif %}
+
+            {% for page_num in total_num %}
+            {% if page_num == goods_list.number %}
+            <li class="active"><a href="javascript:;">{{ page_num }}</a></li>
+            {% else %}
+            <li><a href="{% url 'mysite:index' %}?page_num={{ page_num }}">{{ page_num }}</a></li>
+            {% endif %}
+
+            {% endfor %}
+
+            {% if goods_list.has_next %}
+            <li>
+              <a href="{% url 'mysite:index' %}?page_num={{ goods_list.next_page_number }}" aria-label="Next">
+                <span aria-hidden="true">&raquo;</span>
+              </a>
+            </li>
+            {% else %}
+            <li class="disabled">
+              <a href="javascript:;" aria-label="Next">
+                <span aria-hidden="true">&raquo;</span>
+              </a>
+            </li>
+            {% endif %}
+          </ul>
+        </nav>
+  </div>
+ <script>
+       $('#active_email').click(function(){
+       let that = this;
+       $.get('/email/active/', function(res){
+       if(res.code == 1){
+         $(that).parent().text('已发送邮件');
+       }else{
+         alert('激活失败，请重试')}
+       })
+       })
+  </script>
+{% endblock %}

@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block head %}
+    <link rel="stylesheet" href="/static/css/bootstrap-datetimepicker.min.css">
+    <script src="/static/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="/static/js/bootstrap-datetimepicker.zh-CN.js"></script>
+    <title>用户中心</title>
+{% endblock %}
+
+{% block body %}
+
+    <div class="container">
+        <div class="jumbotron">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <form method="post" action="/submit_goods/" enctype="multipart/form-data">
+                      {% csrf_token %}
+                        <div class="form-group">
+                            <label for="goods_info">失物名称</label>
+                            <input type="text" id="goods_info" name="goods_info" class="form-control" placeholder="填写失物名称">
+                        </div>
+                        <div class="form-group">
+                            <label for="goods_type">失物种类</label>
+                            <input type="text" id="goods_type" name="goods_type" class="form-control" placeholder="填写失物种类">
+                        </div>
+                        <div class="form-group">
+                            <label for="datetime">获取失物时间</label>
+                            <input type="text" id="datetime" name="datetime" class="form-control" placeholder="填写获取失物的时间">
+                            {% if datetime_error %}
+                                <span class="help-block" style="color: red">{{ datetime_error }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="form-group">
+                          <label for="address">获取失物地址</label>
+                          <input type="text" id="address" name="address" class="form-control" name="address" placeholder="填写获取失物的地址">
+                        </div>
+                        <div class="form-group">
+                          <label for="pictureFile">上传图片</label>
+                          <input class="btn btn-xlarge btn-clean-one" id="pictureFile" type="file" onchange="setSpanCon()" name="pictureFile" style="opacity: 0;position:absolute;top: 0;left: -300px;">
+                            <span class="btn btn-xlarge btn-default" id="showFilename" onclick="setFilename()">选择文件</span>
+                          {% if img_error %}
+                            <span class="help-block" style="color: red">{{ img_error }}</span>
+                          {% endif %}
+                        </div>
+                        <button type="submit" class="btn btn-primary">发布获得的失物</button>
+                        {% if message %}
+                            <span style="color: red">{{ message }}</span>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+
+            <table class="table table-hover">
+                <h2>我发布的失物</h2>
+                <tr>
+                    <th>失物名称</th>
+                    <th>失物种类</th>
+                    <th>发布时间</th>
+                    <th>失物地址</th>
+                    <th>失物状态</th>
+                    <th>操作</th>
+                </tr>
+                {% for goods in goods_list %}
+                    </tr>
+                        <td>{{ goods.gname }}</td>
+                        <td>{{ goods.gtype }}</td>
+                        <td>{{ goods.gtime }}</td>
+                        <td>{{ goods.address }}</td>
+                        <td>{% if goods.status %}已认领 {% else %}未认领 <a class="status" a href="javascript:;" value="{{ goods.id}}">已经认领</a>{% endif %}</td>
+                        <td><a class="delete_goods" href="javascript:;" value="{{ goods.id }}">删除</a></td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+
+    <script>
+       //日期选择器
+       $('#datetime').datetimepicker({
+        language: 'zh-CN',//显示中文
+        format: 'yyyy-mm-dd hh:ii',//显示格式
+        minView: 0,//设置显示到哪个日期
+        initialDate: new Date(),
+        todayBtn: true,//显示今日按钮
+        autoclose: true,//选中自动关闭
+        endDate:new Date()  // 可选日期到今天为止
+      })
+
+        // button的click事件
+      function setFilename(){
+        let picInput = $('#pictureFile')
+        picInput.click()
+      }
+
+      // file 的change事件
+      function setSpanCon() {
+        let picName = $('#pictureFile').val()
+        let picPathArray = picName.split('\\')
+        let filename = picPathArray[picPathArray.length - 1]
+        console.log(filename)
+        $('#showFilename').html(filename)
+      }
+
+      $('.table a.status').click(function () {
+          let goods_id = $(this).attr('value');
+          let that = this;
+          $.get('/change_status/?goods_id='+ goods_id, function (res) {
+            if(res.code === 0) {
+              $(that).parent().text('已认领');
+            }else {
+              alert('修改失败，请重试')
+            }
+          })
+      })
+
+      $('.table a.delete_goods').click(function () {
+          let goods_id = $(this).attr('value');
+          $.get('/delete_goods/?goods_id=' + goods_id, function (res) {
+            if(res.code === 0){
+              location.href = '/info/'
+            }else {
+              alert('删除失败，请重试')
+            }
+          })
+       })
+
+    </script>
+
+{% endblock %}
